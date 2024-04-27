@@ -29,6 +29,7 @@ using Volo.Abp.Security.Claims;
 using Volo.Abp.Swashbuckle;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
+using Volo.Abp.OpenIddict;
 
 namespace AbpGoesAzure;
 
@@ -47,15 +48,40 @@ public class AbpGoesAzureHttpApiHostModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
+        // PreConfigure<OpenIddictBuilder>(builder =>
+        // {
+        //     builder.AddValidation(options =>
+        //     {
+        //         options.AddAudiences("AbpGoesAzure");
+        //         options.UseLocalServer();
+        //         options.UseAspNetCore();
+        //     });
+        // });
+
         PreConfigure<OpenIddictBuilder>(builder =>
+    {
+        builder.AddValidation(options =>
         {
-            builder.AddValidation(options =>
-            {
-                options.AddAudiences("AbpGoesAzure");
-                options.UseLocalServer();
-                options.UseAspNetCore();
-            });
+            options.AddAudiences("Abp2Azure");
+            options.UseLocalServer();
+            options.UseAspNetCore();
         });
+
+        var hostingEnvironment = context.Services.GetHostingEnvironment();
+        var configuration = context.Services.GetConfiguration();
+
+        if (hostingEnvironment.IsDevelopment()) return;
+
+        PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
+        {
+            options.AddDevelopmentEncryptionAndSigningCertificate = false;
+        });
+
+        PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
+        {
+            serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["OpenIddictCertificate:X590:Password"]);
+        });
+    });
     }
 
     public override void ConfigureServices(ServiceConfigurationContext context)
