@@ -62,7 +62,7 @@ public class AbpGoesAzureHttpApiHostModule : AbpModule
     {
         builder.AddValidation(options =>
         {
-            options.AddAudiences("Abp2Azure");
+            options.AddAudiences("AbpGoesAzure");
             options.UseLocalServer();
             options.UseAspNetCore();
         });
